@@ -57,13 +57,15 @@ Parameters:
     MinLength: 0
     MaxLength: 64
   CoreOUName:
-    Description: Name of Organizations Unit for the Core Accounts
+    Description: Name of Organizations Unit for the Core Accounts. CloudFormation template validation only allows '-' (hyphen, '.' (period) special characters in the OU names
     Type: String
     Default: core
     MinLength: 1
     MaxLength: 128
+    AllowedPattern: ^[0-9a-zA-Z-\.]+
+    ConstraintDescription: Under the mapping section, the OU name is not allowed to contain special characters except '-' or '.'
   NonCoreOUNames:
-    Description: Comma separated list of additional Organizations Unit names for organizing additional AWS accounts by applications, business units, etc.
+    Description: Comma separated list of additional Organizations Unit names for organizing additional AWS accounts by applications, business units, etc. CloudFormation template validation only allows '-' (hyphen, '.' (period) special characters in the OU names
     Default: applications
     Type: CommaDelimitedList
   PipelineApprovalStage:
@@ -91,40 +93,6 @@ Parameters:
     Default: 'Yes'
     Type: String
 
-# Active Directory
-  ADRegion:
-    Description: Region for Shared Services VPC & AD to be deployed into e.g. us-west-2
-    Type: String
-    AllowedValues:
-      - us-east-1
-      - us-east-2
-      - us-west-1
-      - us-west-2
-      - ap-south-1
-      - ap-southeast-1
-      - ap-southeast-2
-      - ap-northeast-1
-      - ca-central-1
-      - eu-central-1
-      - eu-west-1
-      - eu-west-2
-      - sa-east-1
-
-  DomainDNSName:
-    AllowedPattern: "[a-zA-Z0-9\\-]+\\..+"
-    Default: example.com
-    Description: Fully qualified domain name (FQDN) of the forest root domain e.g. example.com
-    MaxLength: 25
-    MinLength: 3
-    Type: String
-  DomainNetBIOSName:
-    AllowedPattern: "[a-zA-Z0-9\\-]+"
-    Default: example
-    Description: NetBIOS name of the domain (up to 15 characters) for users of earlier versions of Windows e.g. EXAMPLE
-    MaxLength: 15
-    MinLength: 1
-    Type: String
-
 # Shared Services VPC
   VPCOptions:
     Type: String
@@ -140,63 +108,14 @@ Parameters:
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
     Description: CIDR block for the Shared Services VPC
 
-# RDGW Configuration
-  RDGWInstanceType:
-    Description: Amazon EC2 instance type for the Remote Desktop Gateway instances
+# AWS Config
+  EnableConfigAllRegions:
     Type: String
-    Default: t2.large
+    Description: "Do you want to enable AWS Config Service and Rules in all the regions?"
+    Default: 'Yes'
     AllowedValues:
-      - t2.large
-      - m3.large
-      - m3.xlarge
-      - m3.2xlarge
-      - m4.large
-      - m4.xlarge
-      - m4.2xlarge
-      - m4.4xlarge
-      - m5.large
-      - m5.xlarge
-      - m5.2xlarge
-      - m5.4xlarge
-  RDGWCIDR:
-    AllowedPattern: "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$"
-    Description: Allowed CIDR Block for external access to the Remote Desktop Gateways
-    Type: String
-  NumberOfRDGWHosts:
-    AllowedValues:
-      - '1'
-      - '2'
-      - '3'
-      - '4'
-    Default: '1'
-    Description: Enter the number of Remote Desktop Gateway hosts to create
-    Type: String
-
-# AWS SSO (AD Connector) Network Configuration
-  ADConnectorRegion:
-    AllowedValues:
-      - us-east-1
-    Description: List of AWS SSO supported endpoint regions.
-    Default: us-east-1
-    Type: String
-  ADConnectorVPCCIDR:
-    Type: String
-    Default: '10.249.0.0/24'
-    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
-    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
-    Description: CIDR block for AD Connector to use for connecting AWS SSO to Active Directory
-  ADConnectorPrivateSubnet1CIDR:
-    Type: String
-    Default: '10.249.0.0/27'
-    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
-    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
-    Description: CIDR block for AD Connector VPC subnet created in AZ1
-  ADConnectorPrivateSubnet2CIDR:
-    Type: String
-    Default: '10.249.0.32/27'
-    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
-    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
-    Description: CIDR block for AD Connector VPC subnet created in AZ2
+    - 'Yes'
+    - 'No'
 
 # AWS Config Rules
   EnableEncryptedVolumesRule:
@@ -270,6 +189,7 @@ Parameters:
     Default: 90
     AllowedValues: [1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653]
 
+
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -292,27 +212,18 @@ Metadata:
       - PipelineApprovalEmail
       - BuildLandingZone
     - Label:
-        default: Shared Services VPC & Active Directory Configuration
+        default: Shared Services VPC Configuration
       Parameters:
-        - ADRegion
         - VPCOptions
         - VPCCidr
-        - DomainDNSName
-        - DomainNetBIOSName
-        - RDGWInstanceType
-        - RDGWCIDR
-        - NumberOfRDGWHosts
-    - Label:
-        default: AWS SSO Network Configuration
-      Parameters:
-        - ADConnectorRegion
-        - ADConnectorVPCCIDR
-        - ADConnectorPrivateSubnet1CIDR
-        - ADConnectorPrivateSubnet2CIDR
     - Label:
         default: VPC Flow Logs Retention Policy
       Parameters:
         - LogsRetentionInDays
+    - Label:
+        default: AWS Config Service Configuration
+      Parameters:
+      - EnableConfigAllRegions
     - Label:
         default: AWS Config Rules
       Parameters:
@@ -330,7 +241,7 @@ Metadata:
       SharedServicesAccountEmail:
         default: Shared Services Account Email Address
       LoggingAccountEmail:
-        default: Logging Account Email Address
+        default: Log Archive Account Email Address
       SecurityAccountEmail:
         default: Security Account Email Address
       CoreOUName:
@@ -351,30 +262,12 @@ Metadata:
         default: Pipeline Approval Email Address
       BuildLandingZone:
         default: Auto Build Landing Zone
-      DomainDNSName:
-        default: Domain DNS Name
-      DomainNetBIOSName:
-        default: Domain Net BIOS Name
       VPCOptions:
         default: Shared Services VPC Options
       VPCCidr:
         default: Shared Services VPC CIDR
-      ADRegion:
-        default: AD Region
-      RDGWInstanceType:
-        default: RDGW Instance Type
-      RDGWCIDR:
-        default: Allowed Remote Desktop External Access CIDR
-      NumberOfRDGWHosts:
-        default: Number of RDGW Hosts
-      ADConnectorRegion:
-        default: AWS SSO region Endpoint
-      ADConnectorVPCCIDR:
-        default: AD Connector VPC CIDR
-      ADConnectorPrivateSubnet1CIDR:
-        default: AD Connector VPC Subnet 1
-      ADConnectorPrivateSubnet2CIDR:
-        default: AD Connector VPC Subnet 2
+      EnableConfigAllRegions:
+        default: Enable Config Service in All Regions
       EnableEncryptedVolumesRule:
         default: Enable Encrypted Volumes Rule
       EnableRdsEncryptionRule:
@@ -412,7 +305,7 @@ Mappings:
     SourceBucketName:
       Name: solutions-reference
     SourceKeyName:
-      Name: aws-landing-zone/v1.0.2/aws-landing-zone-configuration.zip
+      Name: aws-landing-zone/v2.0/aws-landing-zone-configuration.zip
     LandingZonePipelineS3TriggerKey:
       Name: aws-landing-zone-configuration.zip
     LandingZonePipelineS3NonTriggerKey:
@@ -491,6 +384,8 @@ Resources:
               Service: servicecatalog.amazonaws.com
             Action: sts:AssumeRole
       Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaFullAccess
       Policies:
         - PolicyName: LZAVMProductPolicy
           PolicyDocument:
@@ -503,11 +398,6 @@ Resources:
                   - logs:PutLogEvents
                 Resource:
                   - Fn::Sub: 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*'
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource:
-                  - Fn::Sub: ${LandingZoneLambda.Arn}
               - Effect: Allow
                 Action:
                   - catalog-user:*
@@ -691,11 +581,21 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:s3:::${LandingZonePipelineArtifactS3Bucket}/*"
                   - !Sub "arn:aws:s3:::${LandingZonePipelineS3Bucket}/*"
+              - Effect: Allow
+                Action:
+                - ssm:PutParameter
+                - ssm:GetParameter
+                - ssm:DeleteParameter
+                - ssm:GetParametersByPath
+                - ssm:DescribeParameters
+                Resource: '*'
               - Effect: "Allow"
                 Action:
                   - "codebuild:BatchGetBuilds"
                   - "codebuild:StartBuild"
-                Resource: !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/${LandingZoneCodeBuild}"
+                Resource:
+                  - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/${LandingZoneCodeBuild}"
+                  - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/${LaunchAVMCodeBuild}"
               - Effect: "Allow"
                 Action:
                   - codecommit:GetBranch
@@ -844,18 +744,16 @@ Resources:
               RunOrder: 1
         - Name: LaunchAVM
           Actions:
-            - Name: Deploy
-              InputArtifacts:
-                - Name: BuiltApp
-              ActionTypeId:
-                Category: Invoke
-                Owner: AWS
-                Version: 1
-                Provider: Lambda
-              Configuration:
-                FunctionName: !Ref StateMachineTriggerLambda
-                UserParameters: "{\"pipeline_stage\": \"launch_avm\", \"artifact\" : \"BuiltApp\", \"exec_mode\" : \"sequential\"}"
-              RunOrder: 1
+              - Name: CodeBuild
+                InputArtifacts:
+                  - Name: BuiltApp
+                ActionTypeId:
+                  Category: Build
+                  Owner: AWS
+                  Version: 1
+                  Provider: CodeBuild
+                Configuration:
+                  ProjectName: !Ref LaunchAVMCodeBuild
 
   LandingZoneCodeBuildRole:
     Type: "AWS::IAM::Role"
@@ -885,16 +783,26 @@ Resources:
               - Effect: "Allow"
                 Action:
                   - s3:PutObject
-                  - s3:GetObject
                   - s3:GetObjectVersion
                   - s3:DeleteObject
                 Resource:
                   - !Sub "arn:aws:s3:::${LandingZonePipelineArtifactS3Bucket}/*"
               - Effect: Allow
                 Action:
+                  - s3:GetObject
                   - cloudformation:ValidateTemplate
                 Resource: "*"
-
+              - Effect: "Allow"
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub "arn:aws:s3:::solutions-reference/*"
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParametersByPath
+                  - ssm:DescribeParameters
+                Resource: '*'
   LandingZoneCodeBuild:
       Type: AWS::CodeBuild::Project
       Properties:
@@ -902,17 +810,99 @@ Resources:
           ServiceRole: !GetAtt LandingZoneCodeBuildRole.Arn
           Source:
               Type: CODEPIPELINE
-              BuildSpec: "version: 0.2\n\nphases:\n  install:\n    commands:\n      - export current=`pwd`\n      - if [ ! -f manifest.yaml ] ; then echo 'manifest.yaml does not exist at the root level of aws-landing-zone-configuration.zip, please check the ZIP file'; exit 1 ; fi\n      - yum install yum-utils epel-release -y\n      - yum-config-manager --enable epel\n      - yum update -y\n      - yum install zip wget git libpng-devel libcurl-devel gcc python-devel libjpeg-devel -y\n      - pip install --upgrade pip==9.0.3\n      - pip install --upgrade setuptools\n      - pip install --upgrade virtualenv\n      - pip install --upgrade yorm\n      - pip install --upgrade pykwalify\n      - yum install ruby22-devel jq -y\n      - gem install cfn-nag\n  pre_build:\n    commands:\n      - echo 'Executing validation tests'\n      - echo 'bash validation/run-validation.sh $ARTIFACT_BUCKET'\n      - bash validation/run-validation.sh $ARTIFACT_BUCKET\n      - echo 'Installing validation tests completed `date`'\n  build:\n    commands:\n      - echo 'Starting build `date` in `pwd`'\n      - echo 'Source Dist completed `date`'\n  post_build:\n    commands:\n      - echo 'Starting post build `date` in `pwd`'\n      - echo 'build completed on `date`'\n\nartifacts:\n  files:\n      - '**/*'\n"
+              BuildSpec: "version: 0.2\nphases:\n  install:\n    commands:\n      - export current=`pwd`\n      - if [ -f manifest.yaml ];then export current=`pwd`;else if [ -f aws-landing-zone-configuration/manifest.yaml ]; then export current=`pwd`/aws-landing-zone-configuration;	else echo 'manifest.yaml does not exist at the root level of aws-landing-zone-configuration.zip or inside aws-landing-zone-configuration folder, please check the ZIP file'; exit 1;	fi; fi;\n      - apt-add-repository ppa:brightbox/ruby-ng\n      - apt-get update && apt-get upgrade -y\n      - apt-get install zip wget python-pip libyaml-dev ruby2.2 rsync -y\n      - which python && python --version\n      - which python3 && python3 --version\n      - which pip && pip --version\n      - pip install --upgrade pip==18.0\n      - pip install --upgrade setuptools\n      - pip install --upgrade virtualenv\n      - pip install --upgrade PyYAML\n      - pip install --upgrade yorm\n      - pip install --upgrade jinja2\n      - pip install --upgrade boto3\n      - pip install --upgrade pyyaml\n      - pip install --upgrade pykwalify\n      - pip install cfn_flip\n      - pip freeze\n      - gem install cfn-nag\n  pre_build:\n    commands:\n      - cd $current\n      - echo 'Download the Validation scripts'\n      - aws s3 cp s3://solutions-reference/aws-landing-zone/v2.0/aws-landing-zone-validation.zip $current\n      - unzip -o $current/aws-landing-zone-validation.zip -d $current\n      - cp bin/lz_scripts/* .\n  build:\n    commands:\n      - echo 'Starting build `date` in `pwd`'\n      - echo 'bash merge_directories.sh $LAMBDA_ARN_SSM_PS_KEY'\n      - bash merge_directories.sh $LAMBDA_ARN_SSM_PS_KEY\n      - echo 'Executing validation tests'\n      - echo 'bash $current/validation/run-validation.sh $ARTIFACT_BUCKET'\n      - bash $current/validation/run-validation.sh $ARTIFACT_BUCKET\n      - echo 'Installing validation tests completed `date`'\n      - echo 'Source Dist completed `date`'\n  post_build:\n    commands:\n      - echo 'Starting post build `date` in `pwd`'\n      - echo 'build completed on `date`'\n      - echo 'Printing Merge Report'\n      - cat merge_report.txt\nartifacts:\n  files:\n      - '**/*'"
           Environment:
               ComputeType: BUILD_GENERAL1_SMALL
-              Image: "aws/codebuild/eb-python-3.4-amazonlinux-64:2.1.6"
+              Image: "aws/codebuild/python:3.6.5"
               Type: LINUX_CONTAINER
               EnvironmentVariables:
                   - Name: ARTIFACT_BUCKET
                     Value: !Ref LandingZonePipelineArtifactS3Bucket
+                  - Name: LAMBDA_ARN_SSM_PS_KEY
+                    Value: !FindInMap [SSMParameterNames, LandingZoneLambdaParameterName, Name]
           Artifacts:
               Name: !Sub ${LandingZonePipelineArtifactS3Bucket}-Built
               Type: CODEPIPELINE
+
+  LaunchAVMCodeBuildRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "codebuild.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        - PolicyName: "AWS-Landing-Zone-LaunchAVM-CodeBuild-Policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*"
+              - Effect: "Allow"
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${LandingZonePipelineArtifactS3Bucket}/*"
+              - Effect: "Allow"
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub "arn:aws:s3:::solutions-reference/*"
+              - Effect: Allow
+                Action:
+                  - states:ListExecutions
+                  - states:StartExecution
+                  - states:StopExecution
+                Resource:
+                  - !Ref LaunchAVMStateMachine
+              - Effect: Allow
+                Action:
+                  - states:DescribeStateMachine
+                  - states:DescribeStateMachineForExecution
+                  - states:DescribeExecution
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - organizations:ListRoots
+                  - organizations:ListOrganizationalUnitsForParent
+                  - organizations:ListAccountsForParent
+                  - organizations:DescribeAccount
+                Resource: '*'
+
+  LaunchAVMCodeBuild:
+      Type: AWS::CodeBuild::Project
+      Properties:
+          Name: AWS-Landing-Zone-LaunchAVM-CodeBuild
+          ServiceRole: !GetAtt LaunchAVMCodeBuildRole.Arn
+          Source:
+              Type: CODEPIPELINE
+              BuildSpec: "version: 0.2\nphases:\n  install:\n    commands:\n      - export current=`pwd`\n      - if [ -f manifest.yaml ];then export current=`pwd`;else if [ -f aws-landing-zone-configuration/manifest.yaml ]; then export current=`pwd`/aws-landing-zone-configuration;	else echo 'manifest.yaml does not exist at the root level of aws-landing-zone-configuration.zip or inside aws-landing-zone-configuration folder, please check the ZIP file'; exit 1;	fi; fi;\n      - apt-get update && apt-get upgrade -y\n      - apt-get install zip wget python-pip libyaml-dev -y\n      - which python && python --version\n      - which python3 && python3 --version\n      - which pip && pip --version\n      - pip install --upgrade pip==18.0\n      - pip install --upgrade setuptools\n      - pip install --upgrade virtualenv\n      - pip install --upgrade PyYAML\n      - pip install --upgrade yorm\n      - pip install --upgrade boto3\n      - pip install --upgrade pyyaml\n      - pip freeze\n  pre_build:\n    commands:\n      - cd $current\n      - echo 'Download the Launch AVM Code'\n      - aws s3 cp s3://solutions-reference/aws-landing-zone/v2.0/aws-landing-zone-launch-avm.zip $current\n      - unzip -o $current/aws-landing-zone-launch-avm.zip -d $current\n  build:\n    commands:\n      - echo 'Starting Launch AVM `date` in `pwd`'\n      - echo 'python3 launch_avm.py $log_level $wait_time $current/manifest.yaml $sm_arn_launch_avm'\n      - python3 launch_avm.py $log_level $wait_time $current/manifest.yaml $sm_arn_launch_avm\n      - echo 'Completed Launch AVM `date` in `pwd`'\nartifacts:\n  files:\n      - '**/*'"
+          Environment:
+              ComputeType: BUILD_GENERAL1_SMALL
+              Image: "aws/codebuild/python:3.6.5"
+              Type: LINUX_CONTAINER
+              EnvironmentVariables:
+                  - Name: sm_arn_launch_avm
+                    Value: !Ref LaunchAVMStateMachine
+                  - Name: log_level
+                    Value: !FindInMap [LambdaFunction, Logging, Level]
+                  - Name: wait_time
+                    Value: 300
+          Artifacts:
+              Name: !Sub ${LandingZonePipelineArtifactS3Bucket}-Built
+              Type: CODEPIPELINE
+          TimeoutInMinutes: 480
 
   LandingZoneDeploymentLambdaRole:
     Type: AWS::IAM::Role
@@ -972,6 +962,7 @@ Resources:
                   - !Sub "arn:aws:s3:::solutions-reference/*"
               - Effect: "Allow"
                 Action:
+                  - s3:GetObject
                   - "s3:PutObject"
                 Resource:
                   - !Sub "arn:aws:s3:::${LandingZonePipelineS3Bucket}/*"
@@ -984,9 +975,9 @@ Resources:
           kms_key_alias_name: !FindInMap [KMS, Alias, Name]
       Code:
         S3Bucket: !Sub solutions-${AWS::Region}
-        S3Key: aws-landing-zone/v1.0.2/aws-landing-zone-config-deployer.zip
+        S3Key: aws-landing-zone/v2.0/aws-landing-zone-config-deployer.zip
       FunctionName: LandingZoneDeploymentLambda
-      Description: AWS Landing Zone State Machine Trigger
+      Description: AWS Landing Zone Deployment Lambda
       Handler: config_deployer.lambda_handler
       MemorySize: '512'
       Role: !GetAtt 'LandingZoneDeploymentLambdaRole.Arn'
@@ -1043,6 +1034,7 @@ Resources:
                     - Fn::Sub: ${LandingZoneDeploymentLambdaRole.Arn}
                     - Fn::Sub: ${StateMachineTriggerLambdaRole.Arn}
                     - Fn::Sub: ${LandingZoneCodePipelineRole.Arn}
+                    - Fn::Sub: ${HandshakeSMLambdaRole.Arn}
               Action:
                 - "kms:Encrypt"
                 - "kms:Decrypt"
@@ -1060,13 +1052,8 @@ Resources:
             logging_email: !Ref LoggingAccountEmail
             shared_services_email: !Ref SharedServicesAccountEmail
             security_alert_email: !Ref SecurityAlertEmail
-            ad_region: !Ref ADRegion
-            ad_connector_region: !Ref ADConnectorRegion
             lock_down_stack_sets_role: !Ref LockStackSetsExecutionRole
-        - file_name: parameters/core_accounts/aws-landing-zone-aws-active-directory.json.j2
-          parameters:
-            domain_dns_name: !Ref DomainDNSName
-            domain_net_bios_name: !Ref DomainNetBIOSName
+            enable_config_all_regions: !Ref EnableConfigAllRegions
         - file_name: parameters/core_accounts/aws-landing-zone-shared-services-vpc.json.j2
           parameters:
             number_of_az: !FindInMap [VPC, !Ref VPCOptions, AvailabilityZones]
@@ -1088,17 +1075,10 @@ Resources:
             logs_retention_in_days: !Ref LogsRetentionInDays
             vpc_cidr: !Ref VPCCidr
             transit_vpc: !FindInMap [VPC, !Ref VPCOptions, TransitVPC]
-        - file_name: parameters/core_accounts/aws-landing-zone-primary-account-vpc.json.j2
+        - file_name: parameters/aws_baseline/aws-landing-zone-config-rules-global.json.j2
           parameters:
-            vpc_cidr: !Ref ADConnectorVPCCIDR
-            private_subnet1a_cidr: !Ref ADConnectorPrivateSubnet1CIDR
-            private_subnet2a_cidr: !Ref ADConnectorPrivateSubnet2CIDR
-            logs_retention_in_days: !Ref LogsRetentionInDays
-        - file_name: parameters/core_accounts/aws-landing-zone-rdgw.json.j2
-          parameters:
-            no_of_rdgw_hosts: !Ref NumberOfRDGWHosts
-            rdgw_instance_type: !Ref RDGWInstanceType
-            rdgw_cidr: !Ref RDGWCIDR
+            enable_root_mfa_rule: !Ref EnableRootMfaRule
+            enable_iam_password_policy_rule: !Ref EnableIamPasswordPolicyRule
         - file_name: parameters/aws_baseline/aws-landing-zone-config-rules.json.j2
           parameters:
             enable_encrypted_volumes_rule: !Ref EnableEncryptedVolumesRule
@@ -1106,8 +1086,6 @@ Resources:
             enable_s3_public_read_rule: !Ref EnableS3PublicReadRule
             enable_s3_public_write_rule: !Ref EnableS3PublicWriteRule
             enable_s3_server_side_encryption_rule: !Ref EnableS3ServerSideEncryptionRule
-            enable_root_mfa_rule: !Ref EnableRootMfaRule
-            enable_iam_password_policy_rule: !Ref EnableIamPasswordPolicyRule
             enable_restricted_common_ports_rule: !Ref EnableRestrictedCommonPortsRule
             enable_restricted_ssh_rule: !Ref EnableRestrictedSshRule
         - file_name: parameters/core_accounts/aws-landing-zone-notification.json.j2
@@ -1190,6 +1168,7 @@ Resources:
                   - !Ref ServiceCatalogStateMachine
                   - !Ref LaunchAVMStateMachine
                   - !Ref CheckAVMExistsStateMachine
+                  - !Ref HandshakeStateMachine
               - Effect: Allow
                 Action:
                   - states:DescribeStateMachine
@@ -1233,17 +1212,18 @@ Resources:
           sm_arn_baseline_resources: !Ref StackSetStateMachine
           sm_arn_launch_avm: !Ref LaunchAVMStateMachine
           sm_arn_check_avm_exists: !Ref CheckAVMExistsStateMachine
+          sm_arn_handshake_sm: !Ref HandshakeStateMachine
           lambda_arn_param_name: !FindInMap [SSMParameterNames, LandingZoneLambdaParameterName, Name]
       Code:
         S3Bucket: !Sub solutions-${AWS::Region}
-        S3Key: aws-landing-zone/v1.0.2/aws-landing-zone-state-machine-trigger.zip
+        S3Key: aws-landing-zone/v2.0/aws-landing-zone-state-machine-trigger.zip
       FunctionName: LandingZoneStateMachineTriggerLambda
       Description: AWS Landing Zone State Machine Trigger
       Handler: state_machine_trigger.lambda_handler
-      MemorySize: '1024'
+      MemorySize: '3008'
       Role: !GetAtt 'StateMachineTriggerLambdaRole.Arn'
       Runtime: python3.6
-      Timeout: '300'
+      Timeout: '900'
       TracingConfig:
           Mode: Active
   StateMachineLambdaRole:
@@ -1309,6 +1289,7 @@ Resources:
                   - servicecatalog:CreateTagOption
                   - servicecatalog:CreateProvisioningArtifact
                   - servicecatalog:UpdateProvisioningArtifact
+                  - servicecatalog:DeleteProvisioningArtifact
                   - servicecatalog:UpdatePortfolio
                   - servicecatalog:UpdateProduct
                   - servicecatalog:UpdateTagOption
@@ -1330,6 +1311,7 @@ Resources:
                   - servicecatalog:ListPortfoliosForProduct
                   - servicecatalog:ListConstraintsForPortfolio
                   - servicecatalog:ListProvisioningArtifacts
+                  - servicecatalog:ListPrincipalsForPortfolio
                   - servicecatalog:ListPortfolios
                   - servicecatalog:DescribeRecord
                   - servicecatalog:SearchProvisionedProducts
@@ -1370,6 +1352,7 @@ Resources:
                   - ssm:GetParameters
                   - ssm:DeleteParameter
                   - ssm:DescribeParameters
+                  - ssm:GetParametersByPath
                 Resource: '*'
               - Effect: Allow
                 Action:
@@ -1450,11 +1433,11 @@ Resources:
         Variables:
           log_level: !FindInMap [LambdaFunction, Logging, Level]
           kms_key_alias_name: !FindInMap [KMS, Alias, Name]
-          lock_down_role_arns: !Sub ${AWSCloudFormationStackSetAdministrationRole.Arn},arn:aws:iam::${AWS::AccountId}:role/StateMachineTriggerLambdaRole,arn:aws:iam::${AWS::AccountId}:role/LandingZoneLambdaRole,arn:aws:iam::${AWS::AccountId}:role/LandingZoneLambdaRoleADConnector,arn:aws:iam::${AWS::AccountId}:role/StateMachineLambdaRole,arn:aws:iam::${AWS::AccountId}:role/StateMachineLambdaRoleADConnector
+          ssm_key_for_lock_down_role_arns: lock_down_role_arns_list
           unlock_role_arns: !Sub arn:aws:iam::${AWS::AccountId}:root
       Code:
         S3Bucket: !Sub solutions-${AWS::Region}
-        S3Key: aws-landing-zone/v1.0.2/aws-landing-zone-state-machine.zip
+        S3Key: aws-landing-zone/v2.0/aws-landing-zone-state-machine.zip
       FunctionName: LandingZoneStateMachineLambda
       Description: AWS Landing Zone State Machine Handler
       Handler: state_machine_router.lambda_handler
@@ -1464,6 +1447,163 @@ Resources:
       Timeout: '300'
       TracingConfig:
           Mode: Active
+
+  HandshakeSMLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LandingZoneHandshakeSMLambdaRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: LandingZoneHandshakeSMLambda
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Join ['', ['arn:aws:logs:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId',
+                      ':log-group:/aws/lambda/*']]
+              - Effect: Allow
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeInternetGateways
+                  - ec2:DescribeRegions
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeVpcs
+                  - ec2:DeleteInternetGateway
+                  - ec2:DeleteSubnet
+                  - ec2:DeleteVpc
+                  - ec2:DetachInternetGateway
+                  - ec2:CreateKeyPair
+                  - ec2:DescribeAvailabilityZones
+                  - ec2:DescribeVPCPeeringConnections
+                  - ec2:CreateVPCPeeringConnection
+                  - ec2:AcceptVPCPeeringConnection
+                  - ec2:DeleteVPCPeeringConnection
+                  - ec2:CreateRoute
+                  - ec2:ReplaceRoute
+                  - ec2:DeleteRoute
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - guardduty:ListInvitations
+                  - guardduty:ListDetectors
+                  - guardduty:ListMembers
+                  - guardduty:CreateDetector
+                  - guardduty:DeleteDetector
+                  - guardduty:CreateMembers
+                  - guardduty:InviteMembers
+                  - guardduty:AcceptInvitation
+                  - guardduty:GetMasterAccount
+                  - guardduty:DeleteMembers
+                  - guardduty:DisassociateFromMasterAccount
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ssm:PutParameter
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:DeleteParameter
+                  - ssm:DescribeParameters
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - "kms:Encrypt"
+                  - "kms:Decrypt"
+                  - "kms:ReEncryptFrom"
+                  - "kms:ReEncryptTo"
+                  - "kms:GenerateDataKey"
+                  - "kms:GenerateDataKeyWithoutPlaintext"
+                  - "kms:DescribeKey"
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - sts:AssumeRole
+                Resource: 'arn:aws:iam::*:role/AWSCloudFormationStackSetExecutionRole'
+  HandshakeSMLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          log_level: !FindInMap [LambdaFunction, Logging, Level]
+          wait_time: 15
+      Code:
+        S3Bucket: !Sub solutions-${AWS::Region}
+        S3Key: aws-landing-zone/v2.0/aws-landing-zone-handshake-state-machine.zip
+      Description: AWS Lambda-backed Custom Resources for Handshake Mechanism
+      FunctionName: LandingZoneHandshakeSMLambda
+      Handler: handshake_sm_router.lambda_handler
+      MemorySize: '1024'
+      Role: !GetAtt 'HandshakeSMLambdaRole.Arn'
+      Runtime: python3.6
+      Timeout: '660'
+      TracingConfig:
+        Mode: Active
+
+  LockDownRoleArnParameter0:
+    DependsOn:
+      - StateMachineLambda
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /lock_down_role_arns_list/AWSCloudFormationStackSetAdministrationRole
+      Description: Contains the IAM Role ARNs to lock down the AWSCloudFormationStackSetExecutionRole Role in member account
+      Type: String
+      Value: !Sub ${AWSCloudFormationStackSetAdministrationRole.Arn}
+
+  LockDownRoleArnParameter1:
+    DependsOn:
+      - StateMachineLambda
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /lock_down_role_arns_list/StateMachineTriggerLambdaRole
+      Description: Contains the IAM Role ARNs to lock down the AWSCloudFormationStackSetExecutionRole Role in member account
+      Type: String
+      Value: !Sub arn:aws:iam::${AWS::AccountId}:role/StateMachineTriggerLambdaRole
+
+  LockDownRoleArnParameter2:
+    DependsOn:
+      - StateMachineLambda
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /lock_down_role_arns_list/LandingZoneLambdaRole
+      Description: Contains the IAM Role ARNs to lock down the AWSCloudFormationStackSetExecutionRole Role in member account
+      Type: String
+      Value: !Sub arn:aws:iam::${AWS::AccountId}:role/LandingZoneLambdaRole
+
+  LockDownRoleArnParameter3:
+    DependsOn:
+      - StateMachineLambda
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /lock_down_role_arns_list/StateMachineLambdaRole
+      Description: Contains the IAM Role ARNs to lock down the AWSCloudFormationStackSetExecutionRole Role in member account
+      Type: String
+      Value: !Sub arn:aws:iam::${AWS::AccountId}:role/StateMachineLambdaRole
+
+  LockDownRoleArnParameter4:
+    DependsOn:
+      - StateMachineLambda
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /lock_down_role_arns_list/LandingZoneHandshakeSMLambdaRole
+      Description: Contains the IAM Role ARNs to lock down the AWSCloudFormationStackSetExecutionRole Role in member account
+      Type: String
+      Value: !Sub arn:aws:iam::${AWS::AccountId}:role/LandingZoneHandshakeSMLambdaRole
+
   LandingZoneLambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1509,6 +1649,7 @@ Resources:
                   - !Ref ServiceCatalogStateMachine
                   - !Ref LaunchAVMStateMachine
                   - !Ref CheckAVMExistsStateMachine
+                  - !Ref HandshakeStateMachine
               - Effect: Allow
                 Action:
                   - ec2:DescribeInternetGateways
@@ -1564,9 +1705,10 @@ Resources:
           sm_arn_baseline_resources: !Ref StackSetStateMachine
           sm_arn_launch_avm: !Ref LaunchAVMStateMachine
           sm_arn_check_avm_exists: !Ref CheckAVMExistsStateMachine
+          sm_arn_handshake_sm: !Ref HandshakeStateMachine
       Code:
         S3Bucket: !Sub solutions-${AWS::Region}
-        S3Key: aws-landing-zone/v1.0.2/aws-landing-zone-avm.zip
+        S3Key: aws-landing-zone/v2.0/aws-landing-zone-avm.zip
       Description: AWS Lambda-backed Custom Resources for AVM
       FunctionName: LandingZone
       Handler: lambda_custom_resource.lambda_handler
@@ -1576,6 +1718,7 @@ Resources:
       Timeout: '300'
       TracingConfig:
           Mode: Active
+
   VPCCalculator:
     Type: Custom::VPCCalculator
     Properties:
@@ -1612,6 +1755,7 @@ Resources:
       Description: Contains the Lambda ARN for AVM Custom Resource
       Type: String
       Value: !Sub ${LandingZoneLambda.Arn}
+
   StateMachineRole:
     Type: "AWS::IAM::Role"
     Properties:
@@ -1635,6 +1779,83 @@ Resources:
                 Action:
                   - "lambda:InvokeFunction"
                 Resource: "*"
+
+  #Service Catalog Portfolio for Add-On Products
+  LandingZoneAddOnPortfolio:
+    Type: "AWS::ServiceCatalog::Portfolio"
+    Properties:
+      ProviderName: AWS Solutions
+      Description: Add-On Products for AWS Landing Zone
+      DisplayName: AWS Landing Zone - Add-On Products
+      Tags:
+        - Key: AWS Solutions
+          Value: Landing Zone Solution
+
+  #Service Catalog Add-On Product1
+  LandingZoneAddOnProduct1:
+    Type: "AWS::ServiceCatalog::CloudFormationProduct"
+    Properties:
+      Name: AWS Centralized Logging Solution - Landing Zone Add-On
+      Owner: AWS Solutions
+      Description: Install the centralized log aggregation and monitoring solution
+      ProvisioningArtifactParameters:
+        - Info:
+            LoadTemplateFromURL: https://s3.amazonaws.com/solutions-reference/aws-landing-zone/v2.0/add-on/aws-centralized-logging-soution.template
+          Name: v1
+
+  AddLandingZoneAddOnProduct1ToPortfolio:
+    Type: "AWS::ServiceCatalog::PortfolioProductAssociation"
+    DependsOn:
+      - LandingZoneAddOnPortfolio
+      - LandingZoneAddOnProduct1
+    Properties:
+      PortfolioId: !Ref LandingZoneAddOnPortfolio
+      ProductId: !Ref LandingZoneAddOnProduct1
+
+  LandingZoneAddOnProduct1LaunchConstraint:
+    Type: "AWS::ServiceCatalog::LaunchRoleConstraint"
+    DependsOn:
+      - LandingZoneAddOnPortfolio
+      - LandingZoneAddOnProduct1
+      - AddLandingZoneAddOnProduct1ToPortfolio
+    Properties:
+      Description: !Sub Constraint for Product ID - ${LandingZoneAddOnProduct1}
+      PortfolioId: !Ref LandingZoneAddOnPortfolio
+      ProductId: !Ref LandingZoneAddOnProduct1
+      RoleArn: !Sub ${LandingZoneSCProductConstraintRole.Arn}
+
+  #Service Catalog Add-On Product2
+  LandingZoneAddOnProduct2:
+    Type: "AWS::ServiceCatalog::CloudFormationProduct"
+    Properties:
+      Name: AWS Managed AD and Directory Connector for AWS SSO - Landing Zone Add-On
+      Owner: AWS Solutions
+      Description: This AWS Landing Zone add-on will deploy Directory Connector for AWS SSO peered with AWS Managed Active Directory and a Remote Desktop Gateway in the shared service account. Use this add-on to provide an AWS managed AD infrastructure for controlling user access to AWS and your EC2 instances.
+      ProvisioningArtifactParameters:
+        - Info:
+            LoadTemplateFromURL: https://s3.amazonaws.com/solutions-reference/aws-landing-zone/v2.0/add-on/aws-ad-with-rdgw-ad-connector.template
+          Name: v1
+
+  AddLandingZoneAddOnProduct2ToPortfolio:
+    Type: "AWS::ServiceCatalog::PortfolioProductAssociation"
+    DependsOn:
+      - LandingZoneAddOnPortfolio
+      - LandingZoneAddOnProduct2
+    Properties:
+      PortfolioId: !Ref LandingZoneAddOnPortfolio
+      ProductId: !Ref LandingZoneAddOnProduct2
+  LandingZoneAddOnProduct2LaunchConstraint:
+    Type: "AWS::ServiceCatalog::LaunchRoleConstraint"
+    DependsOn:
+      - LandingZoneAddOnPortfolio
+      - LandingZoneAddOnProduct2
+      - AddLandingZoneAddOnProduct2ToPortfolio
+    Properties:
+      Description: !Sub Constraint for Product ID - ${LandingZoneAddOnProduct2}
+      PortfolioId: !Ref LandingZoneAddOnPortfolio
+      ProductId: !Ref LandingZoneAddOnProduct2
+      RoleArn: !Sub ${LandingZoneSCProductConstraintRole.Arn}
+
   OrganizationsStateMachine:
     Type: 'AWS::StepFunctions::StateMachine'
     Properties:
@@ -2139,6 +2360,7 @@ Resources:
               }
             }
           }
+
   ServiceControlPolicyMachine:
     Type: 'AWS::StepFunctions::StateMachine'
     Properties:
@@ -2563,6 +2785,7 @@ Resources:
               }
             }
           }
+
   StackSetStateMachine:
     Type: 'AWS::StepFunctions::StateMachine'
     Properties:
@@ -3285,6 +3508,12 @@ Resources:
               }
             }
           }
+
+
+
+
+
+
   ServiceCatalogStateMachine:
     Type: 'AWS::StepFunctions::StateMachine'
     Properties:
@@ -3784,7 +4013,7 @@ Resources:
                   {
                     "Variable": "$.RoleArnMatched",
                     "StringEquals": "yes",
-                    "Next": "SSM Parameter Store Pass"
+                    "Next": "Check Rules Exist Pass"
                   },
                   {
                     "Variable": "$.RoleArnMatched",
@@ -3824,6 +4053,142 @@ Resources:
                 "Next": "Create Constraint"
               },
               "Create Constraint": {
+                "Type": "Task",
+                "Resource": "${StateMachineLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Check Rules Exist Pass"
+              },
+              "Check Rules Exist Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "ClassName": "ServiceCatalog",
+                  "FunctionName": "check_rules_exist"
+                },
+                "ResultPath": "$.params",
+                "Next": "Check Rules Exist"
+              },
+              "Check Rules Exist": {
+                "Type": "Task",
+                "Resource": "${StateMachineLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Does Rules Exist?"
+              },
+              "Does Rules Exist?": {
+                "Type": "Choice",
+                "Choices": [
+                  {
+                    "Variable": "$.RulesExist",
+                    "StringEquals": "yes",
+                    "Next": "List Template Constraints Pass"
+                  },
+                  {
+                    "Variable": "$.RulesExist",
+                    "StringEquals": "no",
+                    "Next": "SSM Parameter Store Pass"
+                  }
+                ],
+                "Default": "SSM Parameter Store Pass"
+              },
+              "List Template Constraints Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "ClassName": "ServiceCatalog",
+                  "FunctionName": "list_template_constraints_for_portfolio"
+                },
+                "ResultPath": "$.params",
+                "Next": "List Template Constraints"
+              },
+              "List Template Constraints": {
+                "Type": "Task",
+                "Resource": "${StateMachineLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Does template constraint exist?"
+              },
+              "Does template constraint exist?": {
+                "Type": "Choice",
+                "Choices": [
+                  {
+                    "Variable": "$.TemplateConstraintExist",
+                    "StringEquals": "yes",
+                    "Next": "Describe Template Constraint Pass"
+                  },
+                  {
+                    "Variable": "$.TemplateConstraintExist",
+                    "StringEquals": "no",
+                    "Next": "Create Template Constraint Pass"
+                  }
+                ],
+                "Default": "Unable to find a template constraint"
+              },
+              "Unable to find a template constraint": {
+                "Type": "Fail",
+                "Cause": "Unable to check if template constraint exist"
+              },
+              "Describe Template Constraint Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "ClassName": "ServiceCatalog",
+                  "FunctionName": "describe_template_constraint"
+                },
+                "ResultPath": "$.params",
+                "Next": "Describe Template Constraint"
+              },
+              "Describe Template Constraint": {
+                "Type": "Task",
+                "Resource": "${StateMachineLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Does the template rules match?"
+              },
+              "Does the template rules match?": {
+                "Type": "Choice",
+                "Choices": [
+                  {
+                    "Variable": "$.RulesMatched",
+                    "StringEquals": "yes",
+                    "Next": "SSM Parameter Store Pass"
+                  },
+                  {
+                    "Variable": "$.RulesMatched",
+                    "StringEquals": "no",
+                    "Next": "Delete Template Constraint Pass"
+                  }
+                ],
+                "Default": "Unable to match rules"
+              },
+              "Unable to match rules": {
+                "Type": "Fail",
+                "Cause": "Unable to match the template rules"
+              },
+              "Delete Template Constraint Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "ClassName": "ServiceCatalog",
+                  "FunctionName": "delete_constraint"
+                },
+                "ResultPath": "$.params",
+                "Next": "Delete Template Constraint"
+              },
+              "Delete Template Constraint": {
+                "Type": "Task",
+                "Resource": "${StateMachineLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Create Template Constraint Pass"
+              },
+              "Create Template Constraint Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "ClassName": "ServiceCatalog",
+                  "FunctionName": "create_template_constraint"
+                },
+                "ResultPath": "$.params",
+                "Next": "Create Template Constraint"
+              },
+              "Create Template Constraint": {
                 "Type": "Task",
                 "Resource": "${StateMachineLambda.Arn}",
                 "TimeoutSeconds": 300,
@@ -3949,7 +4314,7 @@ Resources:
                     "Next": "Delete Launch Constraint Pass"
                   }
                 ],
-                "Default": "Is product associated with the portfolio?"
+                "Default": "Check Template Constraints Pass"
               },
               "Delete Launch Constraint Pass": {
                 "Type": "Pass",
@@ -3961,6 +4326,49 @@ Resources:
                 "Next": "Delete Launch Constraint"
               },
               "Delete Launch Constraint": {
+                "Type": "Task",
+                "Resource": "${StateMachineLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Check Template Constraints Pass"
+              },
+              "Check Template Constraints Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "ClassName": "ServiceCatalog",
+                  "FunctionName": "list_template_constraints_for_portfolio"
+                },
+                "ResultPath": "$.params",
+                "Next": "Check Template Constraints"
+              },
+              "Check Template Constraints": {
+                "Type": "Task",
+                "Resource": "${StateMachineLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Does template constraint exist on product?"
+              },
+              "Does template constraint exist on product?": {
+                "Type": "Choice",
+                "Choices": [
+                  {
+                    "Variable": "$.TemplateConstraintExist",
+                    "StringEquals": "yes",
+                    "Next": "Delete Template Constraint from product Pass"
+                  }
+                ],
+                "Default": "Is product associated with the portfolio?"
+              },
+              "Delete Template Constraint from product Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "ClassName": "ServiceCatalog",
+                  "FunctionName": "delete_constraint"
+                },
+                "ResultPath": "$.params",
+                "Next": "Delete Template Constraint from product"
+              },
+              "Delete Template Constraint from product": {
                 "Type": "Task",
                 "Resource": "${StateMachineLambda.Arn}",
                 "TimeoutSeconds": 300,
@@ -4502,13 +4910,330 @@ Resources:
               }
             }
           }
+
+  HandshakeStateMachine:
+    Type: 'AWS::StepFunctions::StateMachine'
+    Properties:
+      StateMachineName: LandingZoneHandshakeStateMachine
+      RoleArn: !GetAtt 'StateMachineRole.Arn'
+      DefinitionString:
+        Fn::Sub: |-
+          {
+            "Comment": "A state machine that manages the handshakes between hub and spoke accounts for multiple AWS services",
+            "StartAt": "Metrics Pass",
+            "States": {
+              "Metrics Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "ClassName": "GeneralFunctions",
+                  "FunctionName": "send_execution_data"
+                },
+                "ResultPath": "$.params",
+                "Next": "Metrics"
+              },
+              "Metrics": {
+                "Type": "Task",
+                "Resource": "${HandshakeSMLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Describe Resources Hub Pass"
+              },
+              "Describe Resources Hub Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "PeerType": "Hub",
+                  "ClassName": "Handshake",
+                  "FunctionName": "describe_resources"
+                },
+                "ResultPath": "$.params",
+                "Next": "Describe Resources Hub"
+              },
+              "Describe Resources Hub": {
+                "Type": "Task",
+                "Resource": "${HandshakeSMLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Describe Resources Spoke Pass"
+              },
+              "Describe Resources Spoke Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "PeerType": "Spoke",
+                  "ClassName": "Handshake",
+                  "FunctionName": "describe_resources"
+                },
+                "ResultPath": "$.params",
+                "Next": "Describe Resources Spoke"
+              },
+              "Describe Resources Spoke": {
+                "Type": "Task",
+                "Resource": "${HandshakeSMLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Action: Create or Delete?"
+              },
+              "Action: Create or Delete?": {
+                "Type": "Choice",
+                "Choices": [
+                  {
+                    "Variable": "$.RequestType",
+                    "StringEquals": "Delete",
+                    "Next": "Delete Resources Spoke Pass"
+                  },
+                  {
+                    "Variable": "$.RequestType",
+                    "StringEquals": "Create",
+                    "Next": "Create Resources Spoke Pass"
+                  },
+                  {
+                    "Variable": "$.RequestType",
+                    "StringEquals": "Update",
+                    "Next": "Create Resources Spoke Pass"
+                  }
+                ],
+                "Default": "Undefined Request Type"
+              },
+              "Create Resources Spoke Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "PeerType": "Spoke",
+                  "ClassName": "Handshake",
+                  "FunctionName": "create_resources"
+                },
+                "ResultPath": "$.params",
+                "Next": "Create Resources Spoke"
+              },
+              "Create Resources Spoke": {
+                "Type": "Task",
+                "Resource": "${HandshakeSMLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Create Resources Hub Pass"
+              },
+              "Create Resources Hub Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "PeerType": "Hub",
+                  "ClassName": "Handshake",
+                  "FunctionName": "create_resources"
+                },
+                "ResultPath": "$.params",
+                "Next": "Create Resources Hub"
+              },
+              "Create Resources Hub": {
+                "Type": "Task",
+                "Resource": "${HandshakeSMLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Send Invitation Pass"
+              },
+              "Send Invitation Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "PeerType": "Hub",
+                  "ClassName": "Handshake",
+                  "FunctionName": "send_invitation"
+                },
+                "ResultPath": "$.params",
+                "Next": "Send Invitation"
+              },
+              "Send Invitation": {
+                "Type": "Task",
+                "Resource": "${HandshakeSMLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Accept Invitation Pass"
+              },
+              "Accept Invitation Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "PeerType": "Spoke",
+                  "ClassName": "Handshake",
+                  "FunctionName": "accept_invitation"
+                },
+                "ResultPath": "$.params",
+                "Next": "Accept Invitation"
+              },
+              "Accept Invitation": {
+                "Type": "Task",
+                "Resource": "${HandshakeSMLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Invitation Status Pass"
+              },
+              "Invitation Status Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "PeerType": "Spoke",
+                  "ClassName": "Handshake",
+                  "FunctionName": "check_invitation_status"
+                },
+                "ResultPath": "$.params",
+                "Next": "Invitation Status"
+              },
+              "Invitation Status": {
+                "Type": "Task",
+                "Resource": "${HandshakeSMLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Handshake Completed?"
+              },
+              "Handshake Completed?": {
+                "Type": "Choice",
+                "Choices": [
+                  {
+                    "Variable": "$.RelationshipStatus",
+                    "StringEquals": "active",
+                    "Next": "Handshake Successful"
+                  },
+                  {
+                    "Variable": "$.RelationshipStatus",
+                    "StringEquals": "enabled",
+                    "Next": "Handshake Successful"
+                  },
+                  {
+                    "Variable": "$.RelationshipStatus",
+                    "StringEquals": "created",
+                    "Next": "Handshake Successful"
+                  },
+                  {
+                    "Variable": "$.RelationshipStatus",
+                    "StringEquals": "emailverification",
+                    "Next": "Handshake Failed"
+                  },
+                  {
+                    "Variable": "$.RelationshipStatus",
+                    "StringEquals": "rejected",
+                    "Next": "Handshake Failed"
+                  },
+                  {
+                    "Variable": "$.RelationshipStatus",
+                    "StringEquals": "expired",
+                    "Next": "Handshake Failed"
+                  },
+                  {
+                    "Variable": "$.RelationshipStatus",
+                    "StringEquals": "MasterAcctIdEqualsMemberAcctId",
+                    "Next": "Handshake Successful"
+                  }
+                ],
+                "Default": "Processing Invitation"
+              },
+              "Handshake Successful": {
+                "Type": "Pass",
+                "Next": "SSM Parameter Store Pass"
+              },
+              "Handshake Failed": {
+                "Type": "Pass",
+                "Next": "Send Failed Pass"
+              },
+              "Processing Invitation": {
+                "Type": "Wait",
+                "Seconds": 10,
+                "Next": "Invitation Status Pass"
+              },
+              "Delete Resources Spoke Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "PeerType": "Spoke",
+                  "ClassName": "Handshake",
+                  "FunctionName": "delete_resources"
+                },
+                "ResultPath": "$.params",
+                "Next": "Delete Resources Spoke"
+              },
+              "Delete Resources Spoke": {
+                "Type": "Task",
+                "Resource": "${HandshakeSMLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Delete Resources Hub Pass"
+              },
+              "Delete Resources Hub Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "PeerType": "Hub",
+                  "ClassName": "Handshake",
+                  "FunctionName": "delete_resources"
+                },
+                "ResultPath": "$.params",
+                "Next": "Delete Resources Hub"
+              },
+              "Delete Resources Hub": {
+                "Type": "Task",
+                "Resource": "${HandshakeSMLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Send Success Pass"
+              },
+              "Undefined Request Type": {
+                "Type": "Pass",
+                "Next": "Send Failed Pass"
+              },
+              "SSM Parameter Store Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "ClassName": "GeneralFunctions",
+                  "FunctionName": "ssm_put_parameters"
+                },
+                "ResultPath": "$.params",
+                "Next": "Put Parameters"
+              },
+              "Put Parameters": {
+                "Type": "Task",
+                "Resource": "${HandshakeSMLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Send Success Pass"
+              },
+              "Send Success Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "ClassName": "GeneralFunctions",
+                  "FunctionName": "send_success_to_cfn"
+                },
+                "ResultPath": "$.params",
+                "Next": "Send Success Response"
+              },
+              "Send Success Response": {
+                "Type": "Task",
+                "Resource": "${HandshakeSMLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Success"
+              },
+              "Success": {
+                "Type": "Succeed"
+              },
+              "Send Failed Pass": {
+                "Type": "Pass",
+                "Result": {
+                  "ClassName": "GeneralFunctions",
+                  "FunctionName": "send_failure_to_cfn"
+                },
+                "ResultPath": "$.params",
+                "Next": "Send Failed Response"
+              },
+              "Send Failed Response": {
+                "Type": "Task",
+                "Resource": "${HandshakeSMLambda.Arn}",
+                "TimeoutSeconds": 300,
+                "HeartbeatSeconds": 60,
+                "Next": "Failed"
+              },
+              "Failed": {
+                "Type": "Fail"
+              }
+            }
+          }
+
 Outputs:
   LandingZoneCodePipeline:
     Description: AWS Landing Zone CodePipieline
     Value: !Ref LandingZoneCodePipeline
   LandingZonePipelineS3Bucket:
-    Description: AWS Landing Zone Configruation Bucket
+    Description: AWS Landing Zone Configuration Bucket
     Value: !Ref LandingZonePipelineS3Bucket
   LandingZoneSolutionVersion:
     Description: Version Number
-    Value: v1.0.2
+    Value: v2.0
