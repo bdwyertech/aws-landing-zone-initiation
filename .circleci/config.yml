@@ -10,12 +10,16 @@ jobs:
 
 workflows:
   version: 2
-  check_for_updates:
+  commit:
+    jobs:
+      - check_for_updates
+
+  weekdays:
     jobs:
       - check_for_updates
     triggers:
       - schedule:
-          cron: "0 15 * * 1-5"
+          cron: '0 15 * * 1-5'
           filters:
             branches:
               only:
