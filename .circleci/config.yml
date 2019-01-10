@@ -24,3 +24,7 @@ workflows:
             branches:
               only:
                 - master
+
+notify:
+  webhooks:
+    - url: https://outlook.office.com/webhook/bf3c24e1-de43-4784-bb79-5e83cc91e31a@a3198c8c-0642-4649-849d-daacc3298f83/CircleCI/35d9a1816edb47e1baf3a9093d23dc58/3938c997-dec0-455f-a135-deae8a68615d
