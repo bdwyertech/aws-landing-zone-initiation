@@ -1,0 +1,8 @@
+# Autodetect text files
+* text=auto
+
+# Force *nix Endings
+*.template text eol=lf
+
+# Syntax Highlighting
+*.template linguist-language=yml
