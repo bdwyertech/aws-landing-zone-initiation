@@ -13,3 +13,10 @@ workflows:
   check_for_updates:
     jobs:
       - check_for_updates
+    triggers:
+      - schedule:
+          cron: "0 15 * * 1-5"
+          filters:
+            branches:
+              only:
+                - master
