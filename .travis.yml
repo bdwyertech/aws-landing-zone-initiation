@@ -10,3 +10,9 @@ script:
 notifications:
   webhooks:
     urls:
+      - secure: "sQQ9j4cjcyV0wGsmXQxBi4RYRfVTnCDXxHACNditFEho1xdydZ8r5UrQ5tTSplS5UXIb/To6KcVdEpe//fqEcrf9hd6tf1B0g7Jyl2ehya9MdqH/g2gLeNFHTHQcaZLvBGbnLHfzzsYIZVSvWif4TLAt0SX7tGv3Tvq3QOcMNnrkDLlB4IfRJLh5tmHAFJjR80Bpvwu2mbJffLyoGiM9wv0I0nrE7aiG0k7cHBL9cjLt9yXHyw0pZ1vC483ifVkuT29I0Ts5HHjW1ogJSvNuF0Vo/n5SQ/mCs8UtfA+Zs1+Zws/Fe6/IUXhU/Y2i8L4sXCtCT2YFNA2rOpwlLSoUKpCH/HC7NFo7SFymNEs5DoDhzZXjQaLItaBbWN5gpcFSMJiZr7UbCiuH9zCvjWvtepSTcmTHmsFDSj2X9h+KdDRkX/LgNQTnld3nLR2/mnTQ18pQ2Ipybl4aA7nyT+tEC6/WUdum8ygm7qFaZNm7fYPbyG/npbdrI5dqUpaj74RaWm/+tS2bw+MVPAeSq0C3l8+9/MU1F/O78Q6L8XKEpbYqS2mgeL1WJsLAz6vTgNoG5b+904JhQH5tNSqGV/a4Afy8/bPhKbBuLhg7Mk3o9pxZ9gz2J1zmY9D60FUEnPiQStU1VZBIEJLW7+svXoq+6z/jAaNWT2Bhtmtjnv45+iE="
+    on_success: change # default: always
+    on_failure: always # default: always
+    on_start: never    # default: never
+    on_cancel: always  # default: always
+    on_error: always   # default: always
