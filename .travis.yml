@@ -1,0 +1,12 @@
+language: minimal
+
+branches:
+  # only:
+  #   - master
+
+script:
+  - bash -c 'diff aws-landing-zone-initiation.template <(curl -s https://s3.amazonaws.com/solutions-reference/aws-landing-zone/latest/aws-landing-zone-initiation.template)'
+
+notifications:
+  webhooks:
+    urls:
